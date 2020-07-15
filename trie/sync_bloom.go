@@ -70,7 +70,7 @@ func NewSyncBloom(memory uint64, database ethdb.Iteratee) *SyncBloom {
 	// Create the bloom filter to track known trie nodes
 	bloom, err := bloomfilter.New(memory*1024*1024*8, 3)
 	if err != nil {
-		panic(fmt.Sprintf("failed to create bloom: %v", err)) // Can't happen, here for sanity
+		panic(fmt.Sprintf("failed to create bloom: %v", err))
 	}
 	log.Info("Allocated fast sync bloom", "size", common.StorageSize(memory*1024*1024))
 
@@ -99,7 +99,7 @@ func (b *SyncBloom) init(database ethdb.Iteratee) {
 	// Note, this is fine, because everything inserted into leveldb by fast sync is
 	// also pushed into the bloom directly, so we're not missing anything when the
 	// iterator is swapped out for a new one.
-	it := database.NewIterator()
+	it := database.NewIterator(nil, nil)
 
 	var (
 		start = time.Now()
@@ -116,7 +116,7 @@ func (b *SyncBloom) init(database ethdb.Iteratee) {
 			key := common.CopyBytes(it.Key())
 
 			it.Release()
-			it = database.NewIteratorWithStart(key)
+			it = database.NewIterator(nil, key)
 
 			log.Info("Initializing fast sync bloom", "items", b.bloom.N(), "errorrate", b.errorRate(), "elapsed", common.PrettyDuration(time.Since(start)))
 			swap = time.Now()
